@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Elasticsearch.Net;
 using Serilog.Debugging;
 using Serilog.Events;
@@ -51,12 +52,12 @@ namespace Serilog.Sinks.Elasticsearch
         ///  or <see cref="M:Serilog.Sinks.PeriodicBatching.PeriodicBatchingSink.EmitBatchAsync(System.Collections.Generic.IEnumerable{Serilog.Events.LogEvent})" />,
         /// not both.
         /// </remarks>
-        protected override void EmitBatch(IEnumerable<LogEvent> events)
+        protected override async Task EmitBatchAsync(IEnumerable<LogEvent> events)
         {
             DynamicResponse result;
             try
             {
-                result = this.EmitBatchChecked<DynamicResponse>(events);
+                result = await this.EmitBatchCheckedAsync<DynamicResponse>(events);
             }
             catch (Exception ex)
             {
@@ -132,7 +133,7 @@ namespace Serilog.Sinks.Elasticsearch
         /// </summary>
         /// <param name="events">The events to emit.</param>
         /// <returns>Response from Elasticsearch</returns>
-        protected virtual T EmitBatchChecked<T>(IEnumerable<LogEvent> events) where T : class, IElasticsearchResponse, new()
+        protected virtual async Task<T> EmitBatchCheckedAsync<T>(IEnumerable<LogEvent> events) where T : class, IElasticsearchResponse, new()
         {
             // ReSharper disable PossibleMultipleEnumeration
             if (events == null || !events.Any())
@@ -164,7 +165,7 @@ namespace Serilog.Sinks.Elasticsearch
                 _state.Formatter.Format(e, sw);
                 payload.Add(sw.ToString());
             }
-            return _state.Client.Bulk<T>(PostData.MultiJson(payload));
+            return await _state.Client.BulkAsync<T>(PostData.MultiJson(payload));
         }
 
         /// <summary>
