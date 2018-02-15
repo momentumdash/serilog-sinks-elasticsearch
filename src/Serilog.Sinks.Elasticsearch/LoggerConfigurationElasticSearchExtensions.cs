@@ -51,9 +51,7 @@ namespace Serilog
         {
             options = options ?? new ElasticsearchSinkOptions(new[] { new Uri(DefaultNodeUri) });
 
-            var sink = string.IsNullOrWhiteSpace(options.BufferBaseFilename)
-                ? (ILogEventSink)new ElasticsearchSink(options)
-                : new DurableElasticsearchSink(options);
+            var sink = (ILogEventSink) new ElasticsearchSink(options);
 
             return loggerSinkConfiguration.Sink(
                 sink,
